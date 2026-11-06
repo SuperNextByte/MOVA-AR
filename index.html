@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MOVA AR · Atrapa els cors</title>
+  <meta name="description" content="MOVA AR: exercicis de mobilitat amb realitat augmentada per a la residència Salus. Projecte de NextByte.">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+
+  <!-- Tipografies de la guia d'estil (Bebas Neue per als títols, Outfit per al text) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Llibreries: p5.js (dibuix) i ml5.js (bodyPose) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.11.1/p5.min.js"></script>
+  <script src="https://unpkg.com/ml5@1.2.1/dist/ml5.min.js"></script>
+</head>
+<body>
+
+  <!-- ============ PANTALLA 1: MENÚ PRINCIPAL ============ -->
+  <section id="screen-menu" class="screen active" aria-labelledby="menu-title">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+
+    <div class="menu-wrap">
+      <h1 id="menu-title" class="sr-only">MOVA AR</h1>
+
+      <!-- Logotip MOVA AR (reproduït en SVG a partir de la guia d'estil) -->
+      <svg class="logo" viewBox="0 0 210 190" role="img" aria-label="Logotip MOVA AR">
+        <g class="logo-shape">
+          <!-- M -->
+          <polygon points="10,92 10,14 36,14 58,50 80,14 106,14 106,92 86,92 86,48 64,84 52,84 30,48 30,92"/>
+          <!-- barra de la O -->
+          <rect x="118" y="14" width="64" height="14" rx="2"/>
+          <!-- O -->
+          <path fill-rule="evenodd" d="M150,38 a27,27 0 1,0 0.1,0 z M150,54 a11,11 0 1,1 -0.1,0 z"/>
+          <!-- V (triangle invertit) -->
+          <path fill-rule="evenodd" d="M10,104 L106,104 L58,182 Z M36,120 L80,120 L58,156 Z"/>
+          <!-- A (triangle) -->
+          <path fill-rule="evenodd" d="M150,104 L198,182 L102,182 Z M150,136 L172,170 L128,170 Z" transform="translate(-6,0)"/>
+        </g>
+        <text x="203" y="186" class="logo-ar" transform="rotate(-90 203 186)">AR</text>
+      </svg>
+
+      <p class="tagline">Moviment · Salut · Vida</p>
+      <p class="menu-intro">Mou els braços davant la pantalla i <strong>atrapa tots els cors</strong> que puguis en 30&nbsp;segons.</p>
+
+      <nav class="menu-buttons" aria-label="Menú principal">
+        <button id="btn-start" class="btn btn-primary btn-xl">
+          <span class="btn-num">1</span> Començar exercici
+        </button>
+        <button id="btn-help" class="btn btn-outline btn-xl">
+          <span class="btn-num">2</span> Instruccions
+        </button>
+      </nav>
+
+      <p class="best" id="best-score" hidden></p>
+    </div>
+
+    <footer class="credits">Residència <strong>Salus</strong> · Una aplicació de <strong>NextByte</strong></footer>
+  </section>
+
+  <!-- ============ PANTALLA 2: INSTRUCCIONS ============ -->
+  <section id="screen-help" class="screen" aria-labelledby="help-title">
+    <div class="help-wrap">
+      <header class="help-head">
+        <p class="eyebrow">Com funciona</p>
+        <h2 id="help-title">Atrapa els cors</h2>
+        <p class="help-lead">Un exercici suau per moure les espatlles i els braços. Es pot fer dret o assegut a una cadira.</p>
+      </header>
+
+      <ol class="steps">
+        <li class="step">
+          <div class="step-img">
+            <svg viewBox="0 0 200 140" aria-hidden="true">
+              <rect x="110" y="24" width="78" height="54" rx="6" class="ill-screen"/>
+              <rect x="138" y="78" width="22" height="10" class="ill-line"/>
+              <rect x="124" y="88" width="50" height="5" rx="2" class="ill-line"/>
+              <circle cx="149" cy="18" r="5" class="ill-pink"/>
+              <circle cx="44" cy="42" r="14" class="ill-body"/>
+              <path d="M24,130 L24,82 Q24,62 44,62 Q64,62 64,82 L64,130 Z" class="ill-body"/>
+              <path d="M74,92 L100,92" class="ill-arrow"/>
+              <path d="M94,86 L101,92 L94,98" class="ill-arrow"/>
+              <text x="70" y="114" class="ill-text">1,5 – 2 m</text>
+            </svg>
+          </div>
+          <div class="step-txt">
+            <span class="step-n">1</span>
+            <h3>Col·loca't davant la càmera</h3>
+            <p>Seu o queda't dret a 1,5 – 2 metres de l'ordinador. Quan premis <em>Començar exercici</em>, el navegador et demanarà permís per fer servir la càmera: prem <strong>Permetre</strong>.</p>
+          </div>
+        </li>
+
+        <li class="step">
+          <div class="step-img">
+            <svg viewBox="0 0 200 140" aria-hidden="true">
+              <rect x="40" y="8" width="120" height="124" rx="16" class="ill-frame"/>
+              <circle cx="100" cy="46" r="17" class="ill-body"/>
+              <path d="M58,132 L58,98 Q58,72 100,72 Q142,72 142,98 L142,132 Z" class="ill-body"/>
+              <circle cx="172" cy="30" r="14" class="ill-ok"/>
+              <path d="M165,30 L170,35 L179,25" class="ill-check"/>
+            </svg>
+          </div>
+          <div class="step-txt">
+            <span class="step-n">2</span>
+            <h3>Encaixa dins la silueta</h3>
+            <p>Veuràs una silueta rosa a la pantalla. Mou-te fins que el cap, les espatlles i els colzes quedin a dins. Quan la silueta es torni <strong>verda</strong>, prem el botó <strong>COMENÇAR!</strong> (o mantén-hi la mà a sobre).</p>
+          </div>
+        </li>
+
+        <li class="step">
+          <div class="step-img">
+            <svg viewBox="0 0 200 140" aria-hidden="true">
+              <circle cx="100" cy="60" r="16" class="ill-body"/>
+              <path d="M66,140 L66,108 Q66,84 100,84 Q134,84 134,108 L134,140 Z" class="ill-body"/>
+              <path d="M128,92 L160,40" class="ill-arm"/>
+              <path d="M72,92 L48,112" class="ill-arm"/>
+              <path class="ill-heart" d="M170,30 c-6,-10 -22,-6 -20,6 c1,8 12,14 20,22 c8,-8 19,-14 20,-22 c2,-12 -14,-16 -20,-6 z"/>
+              <path class="ill-heart small" d="M34,44 c-4,-7 -15,-4 -14,4 c1,6 8,9 14,15 c6,-6 13,-9 14,-15 c1,-8 -10,-11 -14,-4 z"/>
+            </svg>
+          </div>
+          <div class="step-txt">
+            <span class="step-n">3</span>
+            <h3>Toca els cors amb les mans</h3>
+            <p>Apareixeran cors a banda i banda, a diferents alçades. Aixeca i estira el braç fins a tocar-los amb la mà. Cada cor atrapat suma <strong>1 punt</strong>. Tens <strong>30 segons</strong>!</p>
+          </div>
+        </li>
+      </ol>
+
+      <aside class="tip">
+        <strong>Consell de salut:</strong> fes els moviments a poc a poc i respira tranquil·lament. Si sents dolor o mareig, para l'exercici i avisa el personal de la residència.
+      </aside>
+
+      <button id="btn-back" class="btn btn-primary btn-xl">Tornar</button>
+    </div>
+  </section>
+
+  <!-- ============ PANTALLA 3: EXERCICI (càmera + realitat augmentada) ============ -->
+  <section id="screen-game" class="screen" aria-label="Exercici">
+    <div id="stage"></div>
+
+    <!-- Missatge de càrrega -->
+    <div id="loading" class="overlay center">
+      <div class="spinner"></div>
+      <p class="overlay-title" id="loading-text">Engegant la càmera…</p>
+      <p class="overlay-sub">Si el navegador ho pregunta, prem «Permetre».</p>
+      <button class="btn btn-ghost" data-action="menu">Tornar al menú</button>
+    </div>
+
+    <!-- Error de càmera -->
+    <div id="cam-error" class="overlay center" hidden>
+      <p class="overlay-title">No hem pogut fer servir la càmera</p>
+      <p class="overlay-sub" id="cam-error-text">Comprova que hi ha una càmera connectada i que has donat permís al navegador.</p>
+      <button class="btn btn-primary btn-xl" data-action="menu">Tornar al menú</button>
+    </div>
+
+    <!-- Fase de col·locació -->
+    <div id="setup-ui" class="overlay setup" hidden>
+      <div class="setup-banner">
+        <p class="setup-title" id="setup-msg">Col·loca't dins la silueta</p>
+        <ul class="checks">
+          <li id="chk-body">Cap i espatlles visibles</li>
+          <li id="chk-center">Al centre de la pantalla</li>
+          <li id="chk-dist">A la distància correcta</li>
+        </ul>
+      </div>
+      <button id="btn-go" class="btn btn-go" disabled>
+        <span class="go-fill"></span>
+        <span class="go-label">COMENÇAR!</span>
+      </button>
+      <button class="btn btn-ghost corner" data-action="menu">✕ Sortir</button>
+    </div>
+
+    <!-- Marcador durant l'exercici -->
+    <div id="hud" hidden>
+      <div class="hud-box">
+        <span class="hud-label">Punts</span>
+        <span class="hud-val" id="hud-score">0</span>
+      </div>
+      <div class="hud-box timer">
+        <svg viewBox="0 0 44 44" class="ring" aria-hidden="true">
+          <circle cx="22" cy="22" r="19" class="ring-bg"/>
+          <circle cx="22" cy="22" r="19" class="ring-fg" id="ring-fg"/>
+        </svg>
+        <span class="hud-val" id="hud-time">30</span>
+      </div>
+    </div>
+
+    <!-- Compte enrere inicial 3-2-1 -->
+    <div id="countdown" class="countdown" hidden></div>
+
+    <!-- Resultat final -->
+    <div id="end-ui" class="overlay center end" hidden>
+      <p class="eyebrow">Temps!</p>
+      <p class="end-score"><span id="end-score">0</span></p>
+      <p class="end-label">cors atrapats</p>
+      <p class="end-msg" id="end-msg"></p>
+      <button id="btn-finish" class="btn btn-primary btn-xl">FINALITZAR</button>
+    </div>
+  </section>
+
+  <script src="js/sound.js"></script>
+  <script src="js/sketch.js"></script>
+</body>
+</html>
